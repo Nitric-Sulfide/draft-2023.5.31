@@ -1,0 +1,275 @@
+/*
+普通用户可以进行存、取、查询余额功能，
+而VIP除了普通用户具备的功能外还支持透支、转账功能。
+
+该存取一体机需要先输入用户ID和密码
+（分为普通用户和VIP用户），
+若正确后方可进入相应的操作功能列表，
+然后再进行功能选择完成相应的操作。
+
+提示：考虑使用继承关系
+/* protected String usern;
+        protected String passw;
+        protected int money;
+        private int num;*/
+       
+import static java.lang.String.format;
+import java.util.*;
+import java.text.SimpleDateFormat;
+
+    class ATM{
+       
+        protected static String[][] user=new String [2023][2023];
+        protected static int[] money=new int[2023];
+        protected static String[][][] history=new String[2023][99999999][4];
+        protected int id;
+        
+        protected boolean vip=false;
+        
+        static int latest=0;
+        protected int count=0;
+        protected int input=-1;
+        protected int plus=0;
+    
+        Scanner sc=new Scanner(System.in);
+    
+    
+        public ATM(String name,String mima){
+            id=latest;
+            user[latest][0]=name;
+            money[latest]=0;
+            user[latest][1]=mima;
+            latest++;
+            //
+            System.out.println("欢迎创建账户！");        
+            System.out.println("您的账户信息：\n用户名："+user[id][0]+"\n用户ID："+format("%08d",id)+"\n余额："+money[id]+"元。");
+
+        }
+    
+    
+        public void show(){
+            System.out.println(format("%08d",id)+"账户内的余额是："+money[id]+"元。");
+        }
+    
+        public int store(int x){
+            money[id]+=x;
+            System.out.println("操作成功。\n已存入"+x+"元");
+            show();
+            note(id,1,x);
+            return money[id];
+        }
+    
+        public int take(int x){
+            //预误区(准备要/很容易出错)：“取钱”从“存钱”复制粘贴
+            //注意：不要忘了判定“取钱是否有足够存款”
+            if(money[id]>=x){
+                money[id]-=x;
+                System.out.println("操作成功。\n已取现"+x+"元");
+                show();
+                note(id,0,x);
+                }
+            else{
+                System.out.println("操作失败。\n原因：余额不足");
+                }
+            return money[id];
+        }
+        
+        protected void note(int account,int change,int amount){
+            Date d=new Date();
+            SimpleDateFormat f=new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            String ing=f.format(d);
+            
+            history[account][count][0]=ing;
+            history[account][count][1]=change+"";
+            history[account][count][2]=amount+"";
+            history[account][count][3]=money[id]+"";
+        }
+        
+        
+        
+        
+        
+        public void bill(){
+            for(int i = 0;i < count;i++) {
+                    System.out.println(history[id][i][0]);
+                    if(history[id][i][1]=="1"){
+                        System.out.print("增加：+");
+                    }
+                    else{
+                        System.out.print("减少：-");
+                    }
+                    System.out.println(history[id][i][2]+"元;\n余额："+history[id][i][3]+"\n");
+                }
+            }
+            
+        protected void basicMenu(){
+            System.out.println("欢迎"+user[id][0]+"回来！进入菜单：");
+            System.out.println("如需退出请按0;");
+            System.out.println("如要查询余额请按1;");
+            System.out.println("如要存款请按2;");
+            System.out.println("如要取款请按3;");
+            System.out.println("如要查询账单历史请按4;"); 
+            }
+            
+        protected void numkey(boolean vip){
+            input=sc.nextInt();
+            while(input!=0){
+                switch(input){
+                  case 0:  {
+                      break;
+                      }
+                  case 1:  {
+                      show();
+                      break;
+                      }
+                  case 2:  {
+                      System.out.print("请输入您要存款的金额：");
+                      int change=sc.nextInt();
+                      store(change);
+                      break;
+                      }
+                 case 3:  {
+                     System.out.print("请输入您要取款的金额：");
+                      int change=sc.nextInt();
+                      take(change);
+                      break;
+                      }
+                 case 4:  {
+                      bill();
+                      break;
+                      }
+                 case 5:  {
+                      if(vip){
+                          System.out.println("请输入需要透支的金额：");
+                          int get=sc.nextInt();
+                          money[id]-=get;
+                          note(id,0,get);
+                          show();
+                      }
+                      else{
+                          if(money[id]>=plus){
+                              vip=true;
+                          }
+                          take(plus);
+                          }
+                      
+                      break;
+                      }
+                  case 6:  {
+                      if(vip){
+                          System.out.print("请输入收款方账号ID:");
+                          int receive=sc.nextInt();
+                          System.out.print("请输入转账金额:");
+                          int get=sc.nextInt();
+                          money[id]-=get;
+                          money[receive]+=get;
+                          note(receive,0,get);
+                          show();
+                      }
+                      else{
+                          System.out.println("您输入的按键不合法，请重新输入");
+                      }
+                      break;
+                      }
+                  default:{
+                      System.out.println("您输入的按键不合法，请重新输入");
+                      break;
+                      }
+                 }
+                }
+                System.out.println("欢迎下次光临！");
+            }
+            
+            
+            public void menu(){
+                basicMenu();
+                if(vip){
+                    System.out.println("如需透支请按5;");
+                    System.out.println("如需转账请按6。");
+                }
+                else{
+                    System.out.println("如需充值会员请按5，若确定充值请交付"+plus+"元。");
+                }
+                numkey(false);
+            }
+        }
+        
+        
+
+public class Main{
+    ATM you=new ATM();
+    Scanner sc=new Scanner(System.in);
+    
+    public void signup(){
+        System.out.print("创建您的用户名：");
+        String name=sc.nextLine();
+        System.out.print("设置密码：");
+        String mima=sc.nextLine();
+        you.ATM(name,mima);
+    }
+    
+    public boolean login(String name,String mima){
+            for(int i = 0;i < latest;i++) {
+                if(name.equals(user[i][0])&&mima.equals(user[i][1])){
+                    return true;
+                }
+                else{
+                    continue;
+                };
+            }
+            if(i==latest){
+                System.out.println("您输入的用户名或密码有误");
+                return false;
+            }
+        }
+    
+    public static void main(String[] args) {
+        System.out.println("欢迎使用ATM！");
+        System.out.println("如需注册请按1;");
+        System.out.println("如需登陆请按2;");
+        System.out.println("退出请按0。");
+        int come=sc.nextInt();
+        while(come!=0){
+            switch(come){
+                  case 1: {
+                      signup();
+                      break;
+                      }
+                     case 2: {
+                         do{
+                             System.out.print("请输入登陆用户名：");
+                             String mz=sc.nextLine();
+                             System.out.print("请输入登陆密码：");
+                             String mm=sc.nextLine();
+                         }while(!login(mz,mm));
+                      break;
+                      }
+                  default:   {
+                      break;
+                      }
+            }
+        }
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
